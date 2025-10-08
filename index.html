@@ -15,7 +15,7 @@
       justify-content: center;
       align-items: center;
     }
-    .login-box, .update-box, .wallet-box, .lock-box {
+    .login-box, .update-box {
       background: rgba(20, 30, 40, 0.95);
       padding: 40px;
       border-radius: 10px;
@@ -24,7 +24,7 @@
       max-width: 350px;
       text-align: center;
     }
-    .login-box h2, .update-box h2, .wallet-box h2 {
+    .login-box h2, .update-box h2 {
       color: #4fc3f7;
       margin-bottom: 25px;
     }
@@ -99,56 +99,6 @@
       border: 1px solid rgba(244,67,54,0.5);
       padding: 20px; border-radius: 6px; text-align: center; color: #f44336;
     }
-
-    /* ===== Wallet & Modals styles ===== */
-    .wallet-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
-    .logout-btn {
-      background: rgba(244,67,54,0.2);
-      border: 1px solid rgba(244,67,54,0.5);
-      color: #f44336; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px;
-    }
-    .balance-card {
-      background: linear-gradient(135deg, #2c3e50, #34495e);
-      padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: left;
-    }
-    .balance-amount { font-size: 28px; font-weight: bold; color: #4fc3f7; margin: 10px 0; }
-    .balance-details { color:#b3e5fc; font-size:12px; margin-top:10px; }
-    .assets-table { width:100%; margin:20px 0; border-collapse: collapse; }
-    .assets-table th {
-      background: rgba(255,255,255,0.1); color:#4fc3f7; padding:10px; text-align:left; font-size:12px;
-    }
-    .assets-table td {
-      padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.1); color:#b3e5fc; font-size:12px;
-    }
-    .action-buttons { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:25px 0; }
-    .action-btn {
-      background: linear-gradient(135deg, #4fc3f7, #29b6f6);
-      border: none; padding: 15px; border-radius: 10px; color: #0d1b2a; font-weight: bold;
-      cursor: pointer; transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 8px;
-    }
-    .action-btn:hover { background: linear-gradient(135deg, #29b6f6, #039be5); }
-    .receive-modal, .send-modal {
-      position: fixed; top:0; left:0; width:100%; height:100%;
-      background: rgba(0,0,0,0.8);
-      display: flex; justify-content: center; align-items: center; z-index: 1000;
-    }
-    .modal-content {
-      background: rgba(20, 30, 40, 0.98);
-      padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center;
-    }
-    .modal-content h3 { color:#4fc3f7; margin-bottom: 20px; }
-    .address-box {
-      background: rgba(255,255,255,0.1);
-      padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all;
-      font-family: monospace; color: #fff; font-size: 14px;
-    }
-    .copy-btn {
-      background: #4fc3f7; border: none; padding: 10px 20px; border-radius: 6px;
-      color: #0d1b2a; font-weight: bold; cursor: pointer; margin: 10px 0;
-    }
-    .close-btn {
-      background: transparent; border: 1px solid #4fc3f7; padding: 10px 20px; border-radius: 6px; color: #4fc3f7; cursor: pointer; margin-top: 15px;
-    }
   </style>
 </head>
 <body>
@@ -170,6 +120,7 @@
       </div>
       <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
     </form>
+    
     <div class="security-notice">
       <i class="fas fa-shield-alt"></i> Secure authentication required
     </div>
@@ -178,9 +129,11 @@
   <!-- صفحة تحديث المعلومات -->
   <div class="update-box hidden" id="updatePage">
     <h2><i class="fas fa-user-edit"></i> Security Update Required</h2>
+    
     <div class="success-message">
       <i class="fas fa-check-circle"></i> Initial authentication successful! Please update your security information.
     </div>
+    
     <form id="updateForm">
       <div class="form-group">
         <label><i class="fas fa-user"></i> New Username</label>
@@ -224,51 +177,8 @@
     </form>
   </div>
 
-  <!-- صفحة المحفظة -->
-  <div class="wallet-box hidden" id="walletPage">
-    <div class="wallet-header">
-      <h2><i class="fas fa-wallet"></i> Wallet</h2>
-      <button class="logout-btn" id="logoutBtn">Logout</button>
-    </div>
-
-    <div class="balance-card">
-      <h3 style="color:#b3e5fc;">Total Balance</h3>
-      <div class="balance-amount">300,000,000,000,264,400</div>
-      <div class="balance-details">USDT (Visible Value)</div>
-    </div>
-
-    <table class="assets-table">
-      <tr>
-        <th>Token</th>
-        <th>Network</th>
-        <th>Contract</th>
-      </tr>
-      <tr>
-        <td><i class="fab fa-btc"></i> BNB</td>
-        <td>Binance Smart Chain</td>
-        <td>-</td>
-      </tr>
-      <tr>
-        <td><i class="fas fa-coins"></i> TELLER</td>
-        <td>BSC</td>
-        <td><small>0x4953d28b12D862250Cc96163A9C46Ae2B8ef52c5</small></td>
-      </tr>
-    </table>
-
-    <div class="action-buttons">
-      <button class="action-btn" id="sendBtn">
-        <i class="fas fa-paper-plane"></i>
-        <span>Send</span>
-      </button>
-      <button class="action-btn" id="receiveBtn">
-        <i class="fas fa-download"></i>
-        <span>Receive</span>
-      </button>
-    </div>
-  </div>
-
   <!-- صفحة الحظر -->
-  <div class="lock-box hidden" id="lockPage">
+  <div class="login-box hidden" id="lockPage">
     <div class="lock-message">
       <i class="fas fa-lock fa-3x"></i>
       <h2>System Temporarily Locked</h2>
@@ -276,31 +186,6 @@
       <div class="info-text">
         Security policy: System locks for 48 hours after IP and credential changes
       </div>
-    </div>
-  </div>
-
-  <!-- Receive Modal -->
-  <div class="receive-modal hidden" id="receiveModal">
-    <div class="modal-content">
-      <h3><i class="fas fa-qrcode"></i> Receive BNB</h3>
-      <div class="address-box" id="bnbAddress">0x59f1124D678dF8DB052F62f50473AEEdB5DDd365</div>
-      <button class="copy-btn" id="copyAddressBtn">Copy Address</button>
-      <button class="close-btn" id="closeReceiveBtn">Close</button>
-    </div>
-  </div>
-
-  <!-- Send Modal -->
-  <div class="send-modal hidden" id="sendModal">
-    <div class="modal-content">
-      <h3><i class="fas fa-paper-plane"></i> Send Tokens</h3>
-      <form id="sendForm">
-        <input type="text" id="recipientAddress" placeholder="Recipient Address" required
-               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
-        <input type="number" id="sendAmount" placeholder="Amount" required
-               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
-        <button type="submit" class="copy-btn">Transfer</button>
-        <button type="button" id="closeSendBtn" class="close-btn">Cancel</button>
-      </form>
     </div>
   </div>
 
@@ -313,7 +198,9 @@
     };
 
     // دالة فك التشفير
-    function decrypt(data) { return atob(data); }
+    function decrypt(data) {
+      return atob(data);
+    }
 
     // بيانات التطبيق
     let users = JSON.parse(localStorage.getItem('coldWalletUsers')) || {};
@@ -323,8 +210,7 @@
     // عناصر DOM
     const loginPage = document.getElementById('loginPage');
     const updatePage = document.getElementById('updatePage');
-    const walletPage = document.getElementById('walletPage');
-    const lockPage  = document.getElementById('lockPage');
+    const lockPage = document.getElementById('lockPage');
     const loginForm = document.getElementById('loginForm');
     const updateForm = document.getElementById('updateForm');
     const passwordError = document.getElementById('passwordError');
@@ -333,24 +219,12 @@
     const secretKeyElement = document.getElementById('secretKey');
     const lockTimerElement = document.getElementById('lockTimer');
 
-    // مراجع عناصر المحفظة/المودالات
-    const receiveModal = document.getElementById('receiveModal');
-    const sendModal = document.getElementById('sendModal');
-    const receiveBtn = document.getElementById('receiveBtn');
-    const sendBtn = document.getElementById('sendBtn');
-    const closeReceiveBtn = document.getElementById('closeReceiveBtn');
-    const closeSendBtn = document.getElementById('closeSendBtn');
-    const copyAddressBtn = document.getElementById('copyAddressBtn');
-    const bnbAddress = document.getElementById('bnbAddress');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const sendForm = document.getElementById('sendForm');
-
     // التحقق من حالة الحظر
     function checkLockStatus() {
       const lastSecurityChange = localStorage.getItem('lastSecurityChange');
       if (!lastSecurityChange) return false;
 
-      const now = Date.now();
+      const now = new Date().getTime();
       const lockTime = 48 * 60 * 60 * 1000; // 48 ساعة
       const timePassed = now - parseInt(lastSecurityChange);
 
@@ -366,13 +240,19 @@
         `;
         return true;
       }
+      
+      // انتهت مدة الحظر
       localStorage.removeItem('lastSecurityChange');
       return false;
     }
 
     // تسجيل حدث أمني
     function logSecurityEvent(event) {
-      securityLog.push({ event, timestamp: new Date().toISOString(), ip: currentIP });
+      securityLog.push({
+        event: event,
+        timestamp: new Date().toISOString(),
+        ip: currentIP
+      });
       localStorage.setItem('securityLog', JSON.stringify(securityLog));
     }
 
@@ -380,41 +260,31 @@
     function generateGoogleAuthSecret() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
       let secret = '';
-      for (let i = 0; i < 16; i++) secret += chars.charAt(Math.floor(Math.random() * chars.length));
+      for (let i = 0; i < 16; i++) {
+        secret += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
       return secret;
     }
 
     // التحقق من رمز Google Authenticator
-    function verifyGoogleAuthCode(code) { return code.length === 6 && /^\d+$/.test(code); }
+    function verifyGoogleAuthCode(code) {
+      return code.length === 6 && /^\d+$/.test(code);
+    }
 
     // التحقق من تطابق كلمات المرور
     updateConfirmPassword.addEventListener('input', function() {
-      passwordError.style.display = (updatePassword.value !== updateConfirmPassword.value) ? 'block' : 'none';
+      if (updatePassword.value !== updateConfirmPassword.value) {
+        passwordError.style.display = 'block';
+      } else {
+        passwordError.style.display = 'none';
+      }
     });
 
-    // ===== التصحيح الرئيسي: التحقق من بيانات المستخدم المسجلة =====
-    function checkUserCredentials(username, password, twoFACode) {
-      // أولاً: التحقق من المعلومات الافتراضية
-      const decryptedUsername = decrypt(encryptedCredentials.username);
-      const decryptedPassword = decrypt(encryptedCredentials.password);
-      const decryptedTwoFA = decrypt(encryptedCredentials.twoFA);
-      
-      if (username === decryptedUsername && password === decryptedPassword && twoFACode === decryptedTwoFA) {
-        return { success: true, isDefault: true };
-      }
-      
-      // ثانياً: التحقق من المستخدمين المسجلين
-      if (users[username] && users[username].password === password) {
-        // هنا يمكن إضافة التحقق من 2FA إذا كان موجوداً
-        return { success: true, isDefault: false, userData: users[username] };
-      }
-      
-      return { success: false };
-    }
-
-    // معالجة تسجيل الدخول - معدلة
+    // معالجة تسجيل الدخول
     loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
+      
+      // التحقق من الحظر
       if (checkLockStatus()) {
         loginPage.classList.add('hidden');
         lockPage.classList.remove('hidden');
@@ -424,32 +294,38 @@
       const username = document.getElementById('loginUsername').value;
       const password = document.getElementById('loginPassword').value;
       const twoFACode = document.getElementById('login2FA').value;
-
-      const authResult = checkUserCredentials(username, password, twoFACode);
       
-      if (authResult.success) {
-        if (authResult.isDefault) {
-          // الدخول بالمعلومات الافتراضية - يذهب لتحديث المعلومات
-          logSecurityEvent('Initial login with default credentials');
-          loginPage.classList.add('hidden');
-          updatePage.classList.remove('hidden');
-          const secret = generateGoogleAuthSecret();
-          secretKeyElement.textContent = secret;
-        } else {
-          // الدخول بالمعلومات المسجلة - يذهب مباشرة للمحفظة
-          logSecurityEvent('Successful login with registered credentials');
-          loginPage.classList.add('hidden');
-          walletPage.classList.remove('hidden');
-        }
+      // فك التشفير والتحقق
+      const decryptedUsername = decrypt(encryptedCredentials.username);
+      const decryptedPassword = decrypt(encryptedCredentials.password);
+      const decryptedTwoFA = decrypt(encryptedCredentials.twoFA);
+      
+      if (username === decryptedUsername && 
+          password === decryptedPassword && 
+          twoFACode === decryptedTwoFA) {
+        
+        // تسجيل الدخول الناجح
+        logSecurityEvent('Initial login with default credentials');
+        
+        // الانتقال إلى صفحة التحديث
+        loginPage.classList.add('hidden');
+        updatePage.classList.remove('hidden');
+        
+        // توليد مفتاح جديد
+        const secret = generateGoogleAuthSecret();
+        secretKeyElement.textContent = secret;
+        
       } else {
         alert('Invalid credentials. Please check your username, password and 2FA code.');
         logSecurityEvent('Failed login attempt');
       }
     });
 
-    // معالجة تحديث المعلومات - معدلة
+    // معالجة تحديث المعلومات
     updateForm.addEventListener('submit', function(e) {
       e.preventDefault();
+      
+      // التحقق من تطابق كلمات المرور
       if (updatePassword.value !== updateConfirmPassword.value) {
         alert('Passwords do not match. Please try again.');
         return;
@@ -461,6 +337,7 @@
       const securityAnswer = document.getElementById('securityAnswer').value;
       const gauthCode = document.getElementById('gauthCode').value;
       
+      // التحقق من رمز Google Authenticator
       if (!verifyGoogleAuthCode(gauthCode)) {
         alert('Invalid Google Authenticator code. Please enter a valid 6-digit code.');
         return;
@@ -476,58 +353,24 @@
       };
       
       localStorage.setItem('coldWalletUsers', JSON.stringify(users));
-      logSecurityEvent('Security credentials updated successfully');
-
-      // الانتقال مباشرة إلى المحفظة بعد التحديث
-      updatePage.classList.add('hidden');
-      walletPage.classList.remove('hidden');
-    });
-
-    // ===== وظائف المحفظة =====
-    receiveBtn.addEventListener('click', function() {
-      receiveModal.classList.remove('hidden');
-    });
-
-    copyAddressBtn.addEventListener('click', function() {
-      navigator.clipboard.writeText(bnbAddress.textContent.trim());
-      alert('BNB Address copied to clipboard.');
       
-      // بعد نسخ العنوان، يحظر النظام لمدة 48 ساعة
-      setTimeout(() => {
-        localStorage.setItem('lastSecurityChange', Date.now());
-        walletPage.classList.add('hidden');
-        lockPage.classList.remove('hidden');
-        updateLockTimer();
-      }, 3000);
-    });
-
-    closeReceiveBtn.addEventListener('click', function() {
-      receiveModal.classList.add('hidden');
-    });
-
-    sendBtn.addEventListener('click', function() {
-      sendModal.classList.remove('hidden');
-    });
-
-    closeSendBtn.addEventListener('click', function() {
-      sendModal.classList.add('hidden');
-    });
-
-    sendForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('Transfer request sent.');
-      sendModal.classList.add('hidden');
-    });
-
-    logoutBtn.addEventListener('click', function() {
-      walletPage.classList.add('hidden');
-      loginPage.classList.remove('hidden');
-      loginForm.reset();
+      // تفعيل الحظر لمدة 48 ساعة
+      localStorage.setItem('lastSecurityChange', new Date().getTime());
+      logSecurityEvent('Security credentials updated - system locked for 48 hours');
+      
+      // عرض رسالة الحظر
+      updatePage.classList.add('hidden');
+      lockPage.classList.remove('hidden');
+      
+      // تحديث عداد الوقت
+      updateLockTimer();
     });
 
     // تحديث عداد الحظر
     function updateLockTimer() {
-      if (checkLockStatus()) setTimeout(updateLockTimer, 60000);
+      if (checkLockStatus()) {
+        setTimeout(updateLockTimer, 60000); // تحديث كل دقيقة
+      }
     }
 
     // التحقق الأولي من الحظر
@@ -540,9 +383,15 @@
     });
 
     // حماية إضافية
-    document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) {
+      if (e.key === 'F12' || 
+          (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+          (e.ctrlKey && e.shiftKey && e.key === 'J') || 
+          (e.ctrlKey && e.key === 'u')) {
         e.preventDefault();
       }
     });
