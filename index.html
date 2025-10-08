@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  />
+  <title>Cold Wallet Login</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    :root {
+      --bg1: #1a2a3a;
+      --bg2: #0d1b2a;
+      --panel: rgba(20, 30, 40, 0.95);
+      --cyan: #4fc3f7;
+      --cyan-dark: #29b6f6;
+      --text: #b3e5fc;
+      --muted: rgba(255, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.2);
+      --danger: #f44336;
+      --warning: #ffd54f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #fff;
+    }
+    .login-box, .update-box, .wallet-box, .lock-box {
+      background: var(--panel);
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    h2 { color: var(--cyan); margin: 0 0 20px; }
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { color: var(--text); font-size: 14px; display: block; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--muted);
+      color: #fff;
+      font-size: 14px;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: var(--cyan);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #0d1b2a;
+      transition: filter .2s ease;
+    }
+    button:hover { filter: brightness(1.05); }
+    .hidden { display: none !important; }
+    .security-notice {
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 14px;
+      font-size: 11px;
+      color: var(--warning);
+    }
+    .qr-code {
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px auto;
+      width: 150px;
+      height: 150px;
+      display: grid;
+      place-items: center;
+      color: #000;
+      font-size: 12px;
+      text-align: center;
+    }
+    .error-message { color: #ff6b6b; font-size: 12px; margin-top: 6px; display: none; }
+    .success-message {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid rgba(76, 175, 80, 0.5);
+      padding: 10px; border-radius: 6px; margin-bottom: 16px; color: #4caf50; font-size: 12px;
+    }
+    .lock-message {
+      background: rgba(244,67,54,0.12);
+      border: 1px solid rgba(244,67,54,0.35);
+      padding: 16px; border-radius: 8px; color: var(--danger);
+    }
+    .wallet-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .logout-btn {
+      background: rgba(244,67,54,0.2);
+      border: 1px solid rgba(244,67,54,0.5);
+      color: var(--danger); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; width:auto;
+    }
+    .balance-card {
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      padding: 16px; border-radius: 12px; margin-bottom: 20px; text-align: left;
+    }
+    .balance-amount { font-size: 26px; font-weight: bold; color: var(--cyan); margin: 8px 0; word-break: break-all; }
+    .balance-details { color: var(--text); font-size: 12px; }
+    .assets-table { width:100%; margin:18px 0; border-collapse: collapse; }
+    .assets-table th {
+      background: rgba(255,255,255,0.08); color: var(--cyan); padding:10px; text-align:left; font-size:12px;
+    }
+    .assets-table td {
+      padding:12px 10px; border-bottom:1px solid rgba(255,255,255,0.08); color: var(--text); font-size:12px;
+    }
+    .action-buttons { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:20px 0; }
+    .action-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+      border: none; padding: 14px; border-radius: 10px; color: #0d1b2a; font-weight: bold;
+      cursor: pointer; transition: transform .15s ease; display: grid; place-items: center; gap: 6px;
+    }
+    .action-btn:hover { transform: translateY(-1px); }
+    .receive-modal, .send-modal, .reset-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none; place-items: center; z-index: 1000;
+      padding: 18px;
+    }
+    .modal-content {
+      background: rgba(20, 30, 40, 0.98);
+      padding: 26px; border-radius: 14px; width: 100%; max-width: 400px; text-align: center;
+    }
+    .modal-content h3 { color: var(--cyan); margin: 0 0 16px; }
+    .address-box {
+      background: var(--muted); border: 1px solid var(--border);
+      padding: 12px; border-radius: 8px; margin: 14px 0; word-break: break-all;
+      font-family: monospace; color: #fff; font-size: 14px; text-align:left;
+    }
+    .copy-btn { background: var(--cyan); color:#0d1b2a; border:none; padding: 10px; border-radius: 6px; font-weight:700; }
+    .close-btn { background: transparent; border: 1px solid var(--cyan); padding: 10px 16px; border-radius: 6px; color: var(--cyan); cursor: pointer; margin-top: 10px; width:auto; }
+    .link-btn {
+      background: transparent; border: none; color: var(--cyan);
+      font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; width:auto; margin-top: 8px;
+    }
+    .hint { font-size: 11px; color: #9ecfe8; margin-top: 6px; line-height: 1.4; }
+    .bad { color: #ff8585; }
+    .good { color: #7cd67c; }
+  </style>
+</head>
+<body>
+
+  <!-- Login -->
+  <div class="login-box" id="loginPage">
+    <h2><i class="fas fa-wallet"></i> Cold Wallet</h2>
+    <form id="loginForm" autocomplete="off">
+      <div class="form-group">
+        <label><i class="fas fa-user"></i> Username</label>
+        <input type="text" id="loginUsername" placeholder="Enter your username" required>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-shield-alt"></i> 2FA Code</label>
+        <input type="text" id="login2FA" inputmode="numeric" maxlength="6" placeholder="Enter 2FA code" required>
+      </div>
+      <button type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+    </form>
+    <div style="margin-top:10px; text-align:right;">
+      <button type="button" class="link-btn" id="forgotBtn">Forgot password?</button>
+    </div>
+    <div class="security-notice">
+      <i class="fas fa-shield-alt"></i> Secure authentication required
+    </div>
+  </div>
+
+  <!-- Update (first-time after default creds) -->
+  <div class="update-box hidden" id="updatePage">
+    <h2><i class="fas fa-user-edit"></i> Security Update Required</h2>
+    <div class="success-message">
+      <i class="fas fa-check-circle"></i> Initial authentication successful! Please update your security information.
+    </div>
+    <form id="updateForm" autocomplete="off">
+      <div class="form-group">
+        <label><i class="fas fa-user"></i> New Username</label>
+        <input type="text" id="updateUsername" placeholder="Choose a new username" required>
+        <div class="hint">Username must include <b>at least one uppercase letter</b>.</div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> New Password</label>
+        <input type="password" id="updatePassword" placeholder="Choose a new password" required>
+        <div class="hint">Password must be <b>10+ chars</b> and include <b>uppercase</b>, <b>lowercase</b>, <b>number</b>, and <b>symbol</b>.</div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> Confirm New Password</label>
+        <input type="password" id="updateConfirmPassword" placeholder="Confirm your new password" required>
+        <div class="error-message" id="passwordError">Passwords do not match</div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-shield-alt"></i> Security Question</label>
+        <select id="securityQuestion" required>
+          <option value="">Select a security question</option>
+          <option value="pet">What is the name of your first pet?</option>
+          <option value="city">In which city were you born?</option>
+          <option value="school">What was the name of your elementary school?</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-key"></i> Security Answer</label>
+        <input type="text" id="securityAnswer" placeholder="Enter your answer" required>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-mobile-alt"></i> Google Authenticator Setup</label>
+        <div class="qr-code">
+          <div id="qrCodePlaceholder">
+            <strong>Google Authenticator</strong><br>
+            Secret: <span id="secretKey"></span><br>
+            <small>Enter this in your app</small>
+          </div>
+        </div>
+        <input type="text" id="gauthCode" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code from app" required>
+      </div>
+      <button type="submit"><i class="fas fa-check"></i> Complete Security Setup</button>
+      <div class="hint bad" id="updateErr" style="display:none;margin-top:8px;"></div>
+    </form>
+  </div>
+
+  <!-- Wallet -->
+  <div class="wallet-box hidden" id="walletPage">
+    <div class="wallet-header">
+      <h2><i class="fas fa-wallet"></i> Wallet</h2>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="balance-card">
+      <h3 style="color:#b3e5fc;">Total Balance</h3>
+      <div class="balance-amount">300,000,000,000,264,400</div>
+      <div class="balance-details">USDT (Visible Value)</div>
+    </div>
+
+    <table class="assets-table">
+      <tr>
+        <th>Token</th>
+        <th>Network</th>
+        <th>Contract</th>
+      </tr>
+      <tr>
+        <td><i class="fab fa-btc"></i> BNB</td>
+        <td>Binance Smart Chain</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-coins"></i> TELLER</td>
+        <td>BSC</td>
+        <td><small>0x4953d28b12D862250Cc96163A9C46Ae2B8ef52c5</small></td>
+      </tr>
+    </table>
+
+    <div class="action-buttons">
+      <button class="action-btn" id="sendBtn">
+        <i class="fas fa-paper-plane"></i>
+        <span>Send</span>
+      </button>
+      <button class="action-btn" id="receiveBtn">
+        <i class="fas fa-download"></i>
+        <span>Receive</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Lock -->
+  <div class="lock-box hidden" id="lockPage">
+    <div class="lock-message">
+      <i class="fas fa-lock fa-2x"></i>
+      <h2>System Temporarily Locked</h2>
+      <p id="lockTimer">System locked for 48 hours due to security changes</p>
+      <div class="hint">
+        The system enforces a 48h cooldown after credential/IP changes.
+        You’ll see the countdown every time you open this page until it finishes.
+      </div>
+    </div>
+  </div>
+
+  <!-- Receive Modal -->
+  <div class="receive-modal" id="receiveModal">
+    <div class="modal-content">
+      <h3><i class="fas fa-qrcode"></i> Receive BNB</h3>
+      <div class="address-box" id="bnbAddress">0x59f1124D678dF8DB052F62f50473AEEdB5DDd365</div>
+      <button class="copy-btn" id="copyAddressBtn">Copy Address</button>
+      <button class="close-btn" id="closeReceiveBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Send Modal -->
+  <div class="send-modal" id="sendModal">
+    <div class="modal-content">
+      <h3><i class="fas fa-paper-plane"></i> Send Tokens</h3>
+      <form id="sendForm">
+        <input type="text" id="recipientAddress" placeholder="Recipient Address" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <input type="number" id="sendAmount" placeholder="Amount" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <button type="submit" class="copy-btn">Transfer</button>
+        <button type="button" id="closeSendBtn" class="close-btn">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reset/Forgot Password Modal -->
+  <div class="reset-modal" id="resetModal">
+    <div class="modal-content">
+      <h3><i class="fas fa-key"></i> Reset Password</h3>
+      <form id="resetForm" autocomplete="off">
+        <input type="text" id="resetUsername" placeholder="Username" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <input type="text" id="resetSecAnswer" placeholder="Security answer (if set)"
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <input type="password" id="resetNewPass" placeholder="New password" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <input type="password" id="resetNewPass2" placeholder="Confirm new password" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <input type="text" id="reset2fa" inputmode="numeric" maxlength="6" placeholder="New 2FA code (6 digits)" required
+               style="width:100%;padding:10px;margin:10px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;">
+        <div class="hint" style="text-align:left">
+          • Username must include at least one <b>uppercase</b> letter.<br>
+          • Strong password required (10+, upper/lower/number/symbol).
+        </div>
+        <button type="submit" class="copy-btn" style="width:100%;margin-top:10px;">Save & Lock 48h</button>
+        <button type="button" id="closeResetBtn" class="close-btn">Cancel</button>
+        <div class="hint bad" id="resetErr" style="display:none;margin-top:8px;text-align:left;"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ====== Helpers & Storage ======
+    const encryptedCredentials = {
+      username: 'YWRtaW4=',     // 'admin'
+      password: 'YWRtaW4xMjM=', // 'admin123'
+      twoFA:    'MTIzNDU2'      // '123456'
+    };
+    const decrypt = atob;
+    const STORAGE_USERS = 'coldWalletUsers';
+    const STORAGE_LOCK  = 'lastSecurityChange';
+    const STORAGE_CURR  = 'currentUser';
+    const LOCK_MS = 48 * 60 * 60 * 1000;
+
+    function loadUsers() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_USERS)) || {}; }
+      catch { return {}; }
+    }
+    function saveUsers(u) { localStorage.setItem(STORAGE_USERS, JSON.stringify(u)); }
+    function logSecurityEvent(event) {
+      // lightweight logger (optional to extend)
+      const key = 'securityLog';
+      let log = [];
+      try { log = JSON.parse(localStorage.getItem(key)) || []; } catch {}
+      log.push({ event, ts: new Date().toISOString() });
+      localStorage.setItem(key, JSON.stringify(log));
+    }
+
+    // ====== Password / Username Policies ======
+    const strongPassword = (pwd) =>
+      /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /\d/.test(pwd) && /[^A-Za-z0-9]/.test(pwd) && pwd.length >= 10;
+
+    const hasUppercaseInUsername = (u) => /[A-Z]/.test(u);
+
+    const valid2FA = (code) => /^\d{6}$/.test(code);
+
+    // ====== DOM ======
+    const loginPage  = document.getElementById('loginPage');
+    const updatePage = document.getElementById('updatePage');
+    const walletPage = document.getElementById('walletPage');
+    const lockPage   = document.getElementById('lockPage');
+
+    const loginForm  = document.getElementById('loginForm');
+    const updateForm = document.getElementById('updateForm');
+
+    const updateUsername = document.getElementById('updateUsername');
+    const updatePassword = document.getElementById('updatePassword');
+    const updateConfirmPassword = document.getElementById('updateConfirmPassword');
+    const passwordError = document.getElementById('passwordError');
+    const secretKeyElement = document.getElementById('secretKey');
+    const lockTimerElement = document.getElementById('lockTimer');
+    const updateErr = document.getElementById('updateErr');
+
+    const receiveModal = document.getElementById('receiveModal');
+    const sendModal    = document.getElementById('sendModal');
+    const resetModal   = document.getElementById('resetModal');
+
+    const receiveBtn   = document.getElementById('receiveBtn');
+    const sendBtn      = document.getElementById('sendBtn');
+    const closeReceiveBtn = document.getElementById('closeReceiveBtn');
+    const closeSendBtn = document.getElementById('closeSendBtn');
+    const copyAddressBtn = document.getElementById('copyAddressBtn');
+    const bnbAddress   = document.getElementById('bnbAddress');
+    const logoutBtn    = document.getElementById('logoutBtn');
+
+    const forgotBtn    = document.getElementById('forgotBtn');
+    const resetForm    = document.getElementById('resetForm');
+    const closeResetBtn= document.getElementById('closeResetBtn');
+    const resetUsername= document.getElementById('resetUsername');
+    const resetSecAnswer= document.getElementById('resetSecAnswer');
+    const resetNewPass = document.getElementById('resetNewPass');
+    const resetNewPass2= document.getElementById('resetNewPass2');
+    const reset2fa     = document.getElementById('reset2fa');
+    const resetErr     = document.getElementById('resetErr');
+
+    // ====== Lock Handling ======
+    let lockInterval = null;
+
+    function msToHMS(ms) {
+      if (ms <= 0) return '00:00:00';
+      const total = Math.floor(ms / 1000);
+      const h = Math.floor(total / 3600).toString().padStart(2,'0');
+      const m = Math.floor((total % 3600) / 60).toString().padStart(2,'0');
+      const s = Math.floor(total % 60).toString().padStart(2,'0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function showLockCountdown() {
+      const started = parseInt(localStorage.getItem(STORAGE_LOCK) || '0', 10);
+      const endsAt = started + LOCK_MS;
+      const now = Date.now();
+      let remain = Math.max(0, endsAt - now);
+      lockTimerElement.innerHTML = `
+        System locked. Time remaining:
+        <br><strong>${msToHMS(remain)}</strong>
+        <br><small>Unlock at: ${new Date(endsAt).toLocaleString()}</small>
+      `;
+      if (lockInterval) clearInterval(lockInterval);
+      lockInterval = setInterval(() => {
+        const now2 = Date.now();
+        remain = Math.max(0, endsAt - now2);
+        lockTimerElement.innerHTML = `
+          System locked. Time remaining:
+          <br><strong>${msToHMS(remain)}</strong>
+          <br><small>Unlock at: ${new Date(endsAt).toLocaleString()}</small>
+        `;
+        if (remain <= 0) {
+          clearInterval(lockInterval);
+          localStorage.removeItem(STORAGE_LOCK);
+          // Auto-switch back to login when finished
+          lockPage.classList.add('hidden');
+          loginPage.classList.remove('hidden');
+        }
+      }, 1000);
+    }
+
+    function lockActive() {
+      const v = parseInt(localStorage.getItem(STORAGE_LOCK) || '0', 10);
+      return v && (Date.now() - v) < LOCK_MS;
+    }
+
+    function enforceLockUIIfActive() {
+      if (lockActive()) {
+        loginPage.classList.add('hidden');
+        updatePage.classList.add('hidden');
+        walletPage.classList.add('hidden');
+        lockPage.classList.remove('hidden');
+        showLockCountdown();
+        return true;
+      }
+      return false;
+    }
+
+    // ====== QR Secret Generator (placeholder) ======
+    function generateGoogleAuthSecret() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      let secret = '';
+      for (let i = 0; i < 16; i++) secret += chars[Math.floor(Math.random() * chars.length)];
+      return secret;
+    }
+
+    // ====== Login Helpers ======
+    function checkUserCredentials(username, password, twoFACode) {
+      // (1) default
+      const u0 = decrypt(encryptedCredentials.username);
+      const p0 = decrypt(encryptedCredentials.password);
+      const t0 = decrypt(encryptedCredentials.twoFA);
+      if (username === u0 && password === p0 && twoFACode === t0) {
+        return { ok: true, mode: 'default' };
+      }
+      // (2) registered
+      const users = loadUsers();
+      const rec = users[username];
+      if (rec && rec.password === password) {
+        // Optional: verify 2FA server-side, here we just check format
+        if (!valid2FA(twoFACode)) return { ok:false };
+        return { ok: true, mode: 'registered', user: rec };
+      }
+      return { ok:false };
+    }
+
+    // ====== Events ======
+    // On load: if locked, show lock page with countdown
+    window.addEventListener('load', () => {
+      enforceLockUIIfActive();
+    });
+
+    // Live password match hint (update page)
+    updateConfirmPassword.addEventListener('input', () => {
+      passwordError.style.display = (updatePassword.value !== updateConfirmPassword.value) ? 'block' : 'none';
+    });
+
+    // Login submit
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (enforceLockUIIfActive()) return;
+
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const twoFACode = document.getElementById('login2FA').value.trim();
+
+      const r = checkUserCredentials(username, password, twoFACode);
+      if (!r.ok) {
+        alert('Invalid credentials. Please check your username, password and 2FA code.');
+        logSecurityEvent('Failed login attempt');
+        return;
+      }
+
+      if (r.mode === 'default') {
+        // Go to update flow (first-time hardening)
+        loginPage.classList.add('hidden');
+        updatePage.classList.remove('hidden');
+        secretKeyElement.textContent = generateGoogleAuthSecret();
+        logSecurityEvent('Initial login with default credentials -> update required');
+      } else {
+        // Registered user, go to wallet unless lock is active (double-check)
+        if (enforceLockUIIfActive()) return;
+        loginPage.classList.add('hidden');
+        walletPage.classList.remove('hidden');
+        localStorage.setItem(STORAGE_CURR, username);
+        logSecurityEvent('Successful login with registered credentials');
+      }
+    });
+
+    // Update form (enforce username & strong password) + start 48h lock
+    updateForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      updateErr.style.display = 'none';
+      const newUsername = updateUsername.value.trim();
+      const newPassword = updatePassword.value;
+      const confirmPwd  = updateConfirmPassword.value;
+      const securityQuestion = document.getElementById('securityQuestion').value;
+      const securityAnswer  = document.getElementById('securityAnswer').value.trim();
+      const gauthCode = document.getElementById('gauthCode').value.trim();
+
+      if (!hasUppercaseInUsername(newUsername)) {
+        updateErr.textContent = 'Username must include at least one uppercase letter.';
+        updateErr.style.display = 'block'; return;
+      }
+      if (!strongPassword(newPassword)) {
+        updateErr.textContent = 'Password not strong enough (10+, upper/lower/number/symbol).';
+        updateErr.style.display = 'block'; return;
+      }
+      if (newPassword !== confirmPwd) {
+        updateErr.textContent = 'Passwords do not match.';
+        updateErr.style.display = 'block'; return;
+      }
+      if (!valid2FA(gauthCode)) {
+        updateErr.textContent = '2FA code must be 6 digits.';
+        updateErr.style.display = 'block'; return;
+      }
+
+      const users = loadUsers();
+      users[newUsername] = {
+        password: newPassword,
+        securityQuestion,
+        securityAnswer,
+        gauthSecret: secretKeyElement.textContent,
+        lastUpdate: new Date().toISOString()
+      };
+      saveUsers(users);
+      localStorage.setItem(STORAGE_CURR, newUsername);
+
+      // Start 48h lock right after securing
+      localStorage.setItem(STORAGE_LOCK, Date.now().toString());
+      logSecurityEvent('Security updated -> 48h lock');
+      updatePage.classList.add('hidden');
+      lockPage.classList.remove('hidden');
+      showLockCountdown();
+    });
+
+    // Wallet actions
+    receiveBtn.addEventListener('click', () => { receiveModal.style.display = 'grid'; });
+    closeReceiveBtn.addEventListener('click', () => { receiveModal.style.display = 'none'; });
+    copyAddressBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(bnbAddress.textContent.trim());
+      alert('BNB Address copied to clipboard.');
+      // Example: copying triggers security lock (optional behavior)
+      setTimeout(() => {
+        localStorage.setItem(STORAGE_LOCK, Date.now().toString());
+        walletPage.classList.add('hidden');
+        lockPage.classList.remove('hidden');
+        showLockCountdown();
+      }, 1000);
+    });
+
+    sendBtn.addEventListener('click', () => { sendModal.style.display = 'grid'; });
+    closeSendBtn.addEventListener('click', () => { sendModal.style.display = 'none'; });
+    document.getElementById('sendForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Transfer request sent.');
+      sendModal.style.display = 'none';
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      walletPage.classList.add('hidden');
+      loginPage.classList.remove('hidden');
+      loginForm.reset();
+      localStorage.removeItem(STORAGE_CURR);
+    });
+
+    // Forgot password modal
+    function showResetModal(){ resetModal.style.display = 'grid'; }
+    function hideResetModal(){ resetModal.style.display = 'none'; resetForm.reset(); resetErr.style.display='none'; }
+    forgotBtn.addEventListener('click', showResetModal);
+    closeResetBtn.addEventListener('click', hideResetModal);
+
+    resetForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      resetErr.style.display = 'none';
+      const u  = resetUsername.value.trim();
+      const sa = resetSecAnswer.value.trim();
+      const p1 = resetNewPass.value;
+      const p2 = resetNewPass2.value;
+      const t  = reset2fa.value.trim();
+
+      if (!hasUppercaseInUsername(u)) { resetErr.textContent = 'Username must include at least one uppercase letter.'; resetErr.style.display='block'; return; }
+      if (!strongPassword(p1))        { resetErr.textContent = 'Password not strong enough (10+, upper/lower/number/symbol).'; resetErr.style.display='block'; return; }
+      if (p1 !== p2)                  { resetErr.textContent = 'Passwords do not match.'; resetErr.style.display='block'; return; }
+      if (!valid2FA(t))               { resetErr.textContent = '2FA code must be 6 digits.'; resetErr.style.display='block'; return; }
+
+      const users = loadUsers();
+      const exists = !!users[u];
+
+      // If user existed and had a security answer, require match
+      if (exists && users[u].securityAnswer && users[u].securityAnswer.length > 0) {
+        if (sa !== users[u].securityAnswer) {
+          resetErr.textContent = 'Security answer does not match.'; resetErr.style.display='block'; return;
+        }
+      }
+
+      // Save / update user
+      users[u] = {
+        password: p1,
+        securityQuestion: users[u]?.securityQuestion || 'reset',
+        securityAnswer: sa || users[u]?.securityAnswer || '',
+        gauthSecret: generateGoogleAuthSecret(),
+        lastUpdate: new Date().toISOString()
+      };
+      saveUsers(users);
+      localStorage.setItem(STORAGE_CURR, u);
+
+      // Start 48h lock
+      localStorage.setItem(STORAGE_LOCK, Date.now().toString());
+      logSecurityEvent('Password/2FA reset -> 48h lock');
+      hideResetModal();
+      loginPage.classList.add('hidden');
+      updatePage.classList.add('hidden');
+      walletPage.classList.add('hidden');
+      lockPage.classList.remove('hidden');
+      showLockCountdown();
+    });
+
+    // Basic hardening
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) {
+        e.preventDefault();
+      }
+    });
+
+    // Prepare update secret on first-show
+    // (generate placeholder so user sees something before entering app)
+    secretKeyElement.textContent = generateGoogleAuthSecret();
+  </script>
+</body>
+</html>
