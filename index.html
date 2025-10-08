@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -404,6 +404,35 @@
     });
   </script>
 
+  <!-- ===== Auto-restore wallet_backup.json (added) ===== -->
+  <script>
+    (async () => {
+      try {
+        // يحاول قراءة wallet_backup.json من نفس المجلد بدون كاش
+        const res = await fetch('wallet_backup.json', { cache: 'no-store' });
+        if (!res.ok) return; // الملف غير موجود — تجاهل بهدوء
+
+        const data = await res.json();
+        if (data && typeof data === 'object' && data.coldWalletUsers && typeof data.coldWalletUsers === 'object') {
+          // تخزين في localStorage
+          localStorage.setItem('coldWalletUsers', JSON.stringify(data.coldWalletUsers));
+          if (data.securityLog)        localStorage.setItem('securityLog', JSON.stringify(data.securityLog));
+          if (data.lastSecurityChange) localStorage.setItem('lastSecurityChange', data.lastSecurityChange);
+
+          // مزامنة المتغير العالمي users إن كان مُعرّفًا
+          if (typeof users !== 'undefined') {
+            users = data.coldWalletUsers;
+          }
+          console.log('✅ Auto-restore: wallet_backup.json loaded.');
+        } else {
+          console.warn('⚠️ Auto-restore: invalid wallet_backup.json format (missing coldWalletUsers).');
+        }
+      } catch (err) {
+        console.warn('⚠️ Auto-restore failed:', err);
+      }
+    })();
+  </script>
+
   <!-- ===== Wallet Page (new) ===== -->
   <div class="wallet-box hidden" id="walletPage" style="display:none;">
     <div class="wallet-header">
@@ -533,12 +562,6 @@
     });
 
     // ملاحظة: لا نغيّر تدفّق التحديث الأمني الأصلي.
-    // يمكنك لاحقًا إظهار walletPageEl يدوياً بعد انتهاء القفل إذا رغبت.
   </script>
 </body>
 </html>
-
-
-</body>
-</html>
-
